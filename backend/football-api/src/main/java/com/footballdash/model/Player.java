@@ -17,7 +17,7 @@ public class Player {
     private Long id;
 
     @Column(unique = true)
-    private String externalId;
+    private Long externalId;
 
     @Column(nullable = false)
     private String name;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "matches")
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
