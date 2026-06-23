@@ -16,7 +16,7 @@ public interface TeamRepository extends JpaRepository<Team,Long> {
     Optional<Team> findByExternalId(Long externalId);
 
     // Auto-Generated at runtime by jpa repository
-    List<Team> findByTeamNameContainingIgnoreCase(String name);
+    List<Team> findByNameContainingIgnoreCase(String name);
 
     //Checks that the team exists , Auto-Generated at runtime by jpa repository
     boolean existsByExternalId(Long externalId);

@@ -23,6 +23,9 @@ public class MatchService {
     }
 
     public List<Match> getAll(){
+        if (matchRepository.count() == 0) {
+            footballApiService.syncMatches(1);
+        }
         return matchRepository.findAll();
     }
 }

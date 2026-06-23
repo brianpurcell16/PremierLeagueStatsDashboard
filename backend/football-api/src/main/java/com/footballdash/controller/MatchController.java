@@ -19,8 +19,9 @@ public class MatchController {
      */
 
     @GetMapping
-    public List<Match> getMatches(@RequestParam(required = false) Integer matchday) {
-        if(matchday != null){
+    public List<Match> getMatches(
+            @RequestParam(required = false) Integer matchday) {
+        if (matchday != null) {
             return matchService.getByMatchDay(matchday);
         }
         return matchService.getAll();

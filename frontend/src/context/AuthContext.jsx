@@ -7,26 +7,24 @@ const AuthContext = createContext(null);
  * It initialises from localStorage so the user stays logged in when the page is refreshed.
  */
 
-export function AuthProvider({children}){
-    const [token, setToken] = useState(
-        () => localStorage.getItem('token')
-    );
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
 
-    const login = useCallback((newToken) => {
-        localStorage.getItem('token', newToken);
-        setToken(newToken);
-    }, []);
+  const login = useCallback((newToken) => {
+    localStorage.setItem("token", newToken);
+    setToken(newToken);
+  }, []);
 
-    const logout = useCallback(() =>{
-        localStorage.removeItem('token');
-        setToken(null);
-    }, []);
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    setToken(null);
+  }, []);
 
-    return (
-        <AuthContext.Provider value={{ token, login, logout, isAuth: !!token}}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ token, login, logout, isAuth: !!token }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);

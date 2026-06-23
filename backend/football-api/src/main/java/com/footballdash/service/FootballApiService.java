@@ -42,15 +42,16 @@ public class FootballApiService {
     };
 
     /** Fetch all premier league teams and update or insert them into the DB */
-    public void syncTeams(){
-        log.info("Syncing the PL teams from football-data.org with the local database ......");
+    public void syncTeams() {
+        log.info("Syncing PL teams from football-data.org...");
         String url = baseUrl + "/competitions/PL/teams";
-        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.GET, withAuthHeaders(), JsonNode.class);
 
-        for(JsonNode t : response.getBody().get("teams") ){
+        for (JsonNode t : response.getBody().get("teams")) {
             Long extId = t.get("id").asLong();
-            //finding by external id prevents duplicate rows on re sync
-            Team team = teamRepository.findByExternalId(extId).orElse(new Team());
+            Team team = teamRepository.findByExternalId(extId)
+                    .orElse(new Team());
             team.setExternalId(extId);
             team.setName(t.get("name").asText());
             team.setShortName(t.path("shortName").asText(""));
@@ -59,10 +60,29 @@ public class FootballApiService {
             team.setVenue(t.path("venue").asText(""));
             team.setFounded(t.path("founded").asText(""));
             team.setWebsite(t.path("website").asText(""));
-            team.setClubColours(t.path("clubColours").asText(""));
-            teamRepository.save(team);
+            team.setClubColours(t.path("clubColors").asText(""));
+            team = teamRepository.save(team);
+
+            // Sync squad from the same response — no extra API call needed
+            JsonNode squad = t.get("squad");
+            if (squad != null && squad.isArray() && squad.size() > 0) {
+                for (JsonNode p : squad) {
+                    Long playerExtId = p.get("id").asLong();
+                    Player player = playerRepository.findByExternalId(playerExtId)
+                            .orElse(new Player());
+                    player.setExternalId(playerExtId);
+                    player.setName(p.get("name").asText());
+                    player.setPosition(p.path("position").asText(""));
+                    player.setNationality(p.path("nationality").asText(""));
+                    player.setTeamId(team.getId());
+                    playerRepository.save(player);
+                }
+                log.info("Saved {} players for {}", squad.size(), team.getName());
+            } else {
+                log.warn("No squad data in response for {}", team.getName());
+            }
         }
-        log.info("Teams sync complete. {} teams saved.", teamRepository.count());
+        log.info("Team and squad sync complete.");
     }
 
     /** Fetches and stores all matches for the preimer league matchday that is passed in*/
@@ -90,24 +110,26 @@ public class FootballApiService {
     }
 
     /** Fetches and stores a squad for team id that is passed in*/
-    public void syncSquad(Long teamExternalId){
-        log.info("Syncing the squad from football-data.org with the local database for team {} ......", teamExternalId);
-        String url = baseUrl + "/teams/" + teamExternalId;
-        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), JsonNode.class);
+    public void syncSquad(Long teamExternalId) {
+        log.info("Syncing squad for team {}...", teamExternalId);
+        try {
+            String url = baseUrl + "/teams/" + teamExternalId;
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, HttpMethod.GET, withAuthHeaders(), JsonNode.class);
 
-        JsonNode squad = response.getBody().get("squad");
-        if (squad == null || !squad.isArray()) return;
+            JsonNode squad = response.getBody().get("squad");
+            if (squad == null || !squad.isArray()) {
+                log.warn("No squad data returned for team {}", teamExternalId);
+                return;
+            }
+            for (JsonNode p : squad) {
+                // ... existing save logic
+            }
+            log.info("Squad sync complete for team {}. {} players saved.",
+                    teamExternalId, playerRepository.findByTeamId(teamExternalId).size());
 
-        for(JsonNode p : squad){
-            Long extId = p.get("id").asLong();
-            Player player = playerRepository.findByExternalId(extId).orElse(new Player());
-            player.setExternalId(extId);
-            player.setName(p.get("name").asText(""));
-            player.setPosition(p.path("position").asText(""));
-            player.setNationality(p.path("nationality").asText(""));
-            player.setTeamId(teamExternalId);
-            playerRepository.save(player);
-
+        } catch (Exception e) {
+            log.error("Failed to sync squad for team {}: {}", teamExternalId, e.getMessage());
         }
     }
 }

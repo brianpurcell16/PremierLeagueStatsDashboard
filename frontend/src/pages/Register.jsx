@@ -5,7 +5,7 @@ import { register as registerApi } from "../api/authApi";
 export default function Register() {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [loading, , setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) =>

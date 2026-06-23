@@ -14,6 +14,9 @@ export default function Favourites() {
         // enriched refers to making a call to the database to get the full details for the ids that are favourited using the id and enitity type such as team or player
         const enriched = await Promise.all(
           r.data.map(async (fav) => {
+            console.log("fav:", fav);
+            console.log("entityId:", fav.entityId);
+            console.log("typeof entityId:", typeof fav.entityId);
             const fn = fav.entityType === "TEAM" ? getTeamById : getPlayerById;
             const { data: entity } = await fn(fav.entityId);
             return { ...fav, entity };
@@ -33,7 +36,7 @@ export default function Favourites() {
     load(); //Refreshes the list
   };
 
-  if (laoding) return <div className="loading">Loading Favourites.....</div>;
+  if (loading) return <div className="loading">Loading Favourites.....</div>;
 
   return (
     <div className="page">

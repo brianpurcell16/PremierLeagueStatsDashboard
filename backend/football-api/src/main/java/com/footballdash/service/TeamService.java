@@ -26,6 +26,6 @@ public class TeamService {
     }
 
     public List<Team> search(String query) {
-        return teamRepository.findByTeamNameContainingIgnoreCase(query);
+        return teamRepository.findByNameContainingIgnoreCase(query);
     }
 }

@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { login as loginApi } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 
-export default function login() {
+export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,8 +18,11 @@ export default function login() {
     setError("");
     setLoading(true);
     try {
-      const { data } = await loginApi(form.username, form.password);
-      login(data.token);
+      const response = await loginApi(form.username, form.password);
+      console.log("Full response:", response);
+      console.log("data:", response.data);
+      console.log("token:", response.data.token);
+      login(response.data.token);
       navigate("/dashboard");
     } catch {
       setError("Invalid username or password");
